@@ -2,7 +2,7 @@
 
 **HousingCrafter** (anciennement HousingHDV) est un addon World of Warcraft conçu pour les passionnés de Housing et de décoration. Il transforme l'interface de Commandes d'Artisanat pour faciliter la recherche de meubles, de décorations et de structures.
 
-![HousingCrafter UI](https://i.imgur.com/PLACEHOLDER.png)
+![HousingCrafter UI](docs/preview.jpg)
 
 ## 🏗️ Fonctionnalités Principales
 
