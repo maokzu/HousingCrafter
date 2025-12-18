@@ -1,0 +1,25 @@
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Lua / WoW
+*.bak
+*.old
+*.tmp
+.nop
+.luacheckrc
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Antigravity / AI
+.antigravity/
+.gemini/
+Implementation_plan.md
+task.md
+walkthrough.md
+*.webp

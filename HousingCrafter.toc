@@ -1,0 +1,20 @@
+## Interface: 110002
+## Title: HousingCrafter
+## Notes: Filtrage avancé pour les commandes d'artisanat de décoration
+## Author: Mao_KZU
+## Version: 1.0.0
+## SavedVariables: HousingCrafterDB
+
+# Locales
+Locales\frFR.lua
+
+# Utils
+Utils\Database.lua
+
+# Core
+Core.lua
+
+# UI
+UI\DebugFrame.lua
+UI\FilterFrame.lua
+
