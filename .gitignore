@@ -16,4 +16,7 @@ Thumbs.db
 .idea/
 *.swp
 
-
+# Archives
+*.zip
+*.rar
+*.7z
