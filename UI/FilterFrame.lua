@@ -42,13 +42,7 @@ function addonTable.UI:CreateCustomUI(parent)
     container:SetScript("OnDragStart", function(self) self:StartMoving() end)
     container:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
     
-    -- Masquer/afficher avec la fenêtre parent
-    parent:HookScript("OnShow", function()
-        container:Show()
-    end)
-    parent:HookScript("OnHide", function()
-        container:Hide()
-    end)
+
     
     self.container = container
     
@@ -574,6 +568,9 @@ function addonTable.UI:CreateCustomUI(parent)
     
     parent:HookScript("OnHide", function()
         container:Hide()
+        if guideFrame then guideFrame:Hide() end
+        if labelFrame then labelFrame:Hide() end
+        if addonTable.UI.LabelPopup then addonTable.UI.LabelPopup:Hide() end
     end)
     
     -- Modification du bouton Search pour afficher la popup

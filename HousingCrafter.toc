@@ -2,7 +2,7 @@
 ## Title: HousingCrafter
 ## Notes: Filtrage avancé pour les commandes d'artisanat de décoration
 ## Author: Mao_KZU
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: HousingCrafterDB
 
 # Locales
