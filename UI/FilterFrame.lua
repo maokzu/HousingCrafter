@@ -6,7 +6,7 @@ addonTable.UI = {}
 
 addonTable.UI.Themes = {
     ["Gold"] = { 
-        name = "Classique (Or)", 
+        name = L["VAL_OR"], 
         texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background.tga",
         colors = { 
             Title = {1, 0.82, 0}, 
@@ -18,7 +18,7 @@ addonTable.UI.Themes = {
         } 
     },
     ["Stone"] = { 
-        name = "Pierre Sombrefer", 
+        name = L["VAL_PIERRE"], 
         texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background_Stone.tga",
         colors = { 
             Title = {1, 1, 1}, -- Blanc pur pour contraste max sur pierre foncée
@@ -30,7 +30,7 @@ addonTable.UI.Themes = {
         }
     },
     ["Void"] = { 
-        name = "Néant", 
+        name = L["VAL_NEANT"], 
         texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background_Void.tga",
         colors = { 
             Title = {0.7, 0.4, 0.9}, -- Violet Néant
@@ -170,10 +170,64 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Label "HousingHDV" (Titre Centré sur le Header)
     local label = container:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     label:SetPoint("TOP", headerBg, "TOP", 0, -12) -- Centré verticalement
-    label:SetText("|cFFFFD700Registre de l'Architecte|r")
+    label:SetText(L["TITRE_PRINCIPAL"])
     self:RegisterText(label, "Title")
     label:SetShadowOffset(1, -1)
     
+    -- BOUTON LANGUE (Monde / Drapeau)
+    local langButton = CreateFrame("Button", "HousingHDVLangButton", container)
+    langButton:SetSize(24, 24)
+    langButton:SetPoint("TOPRIGHT", container, "TOPRIGHT", -75, -15) -- À gauche du bouton Accessibilité (qui est à -45)
+    langButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Book_09") -- Livre ouvert (Symbole de connaissance/langue)
+    langButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    
+    -- Dropdown Langue (Caché)
+    local langDropdown = CreateFrame("Frame", "HousingHDVLangDropdown", container, "UIDropDownMenuTemplate")
+    
+    UIDropDownMenu_Initialize(langDropdown, function(self, level)
+        local info = UIDropDownMenu_CreateInfo()
+        info.isTitle = true
+        info.text = L["TITRE_LANGUE"]
+        info.notCheckable = true
+        UIDropDownMenu_AddButton(info, level)
+        
+        local languages = {
+            { code = nil, text = L["LANG_FR"] },
+            { code = "enUS", text = L["LANG_EN"] },
+            { code = "deDE", text = L["LANG_DE"] },
+            { code = "esES", text = L["LANG_ES"] },
+            { code = "itIT", text = L["LANG_IT"] },
+            { code = "ruRU", text = L["LANG_RU"] },
+            { code = "ptBR", text = L["LANG_PT"] },
+            { code = "Elvish", text = L["LANG_ELF"] },
+            { code = "Orc", text = L["LANG_ORC"] }
+        }
+        
+        for _, lang in ipairs(languages) do
+            info = UIDropDownMenu_CreateInfo()
+            info.text = lang.text
+            info.func = function()
+                HousingCrafterDB.Language = lang.code
+                ReloadUI()
+            end
+            -- Check si c'est la langue courante
+            local current = HousingCrafterDB.Language
+            info.checked = (current == lang.code)
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end)
+    
+    langButton:SetScript("OnClick", function(self)
+        ToggleDropDownMenu(1, nil, langDropdown, self, 0, 0)
+    end)
+    
+    langButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TITRE_LANGUE"])
+        GameTooltip:Show()
+    end)
+    langButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
     -- Bouton Accessibilité (Engrenage)
     local accessButton = CreateFrame("Button", "HousingHDVAccessButton", container)
     accessButton:SetSize(24, 24)
@@ -193,8 +247,8 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Tooltip pour Accessibilité
     accessButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Accessibilité")
-        GameTooltip:AddLine("Options d'affichage et de confort.", 1, 1, 1)
+        GameTooltip:SetText(L["TITRE_ACCESSIBILITE"])
+        GameTooltip:AddLine(L["GUIDE_INTRO"], 1, 1, 1) -- Utilise l'intro pour le tooltip court
         GameTooltip:Show()
     end)
     accessButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -233,7 +287,7 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Titre (Jaune)
     local guideTitle = guideFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     guideTitle:SetPoint("TOP", 0, -25)
-    guideTitle:SetText("Guide de l'Architecte")
+    guideTitle:SetText(L["TITRE_GUIDE"])
     guideTitle:SetTextColor(1, 0.82, 0, 1) -- Jaune WoW
     self:RegisterText(guideTitle, "Header")
     
@@ -246,10 +300,10 @@ function addonTable.UI:CreateCustomUI(parent)
     contentText:SetTextColor(1, 1, 1, 1) -- Blanc
     self:RegisterText(contentText, "Content")
     
-    -- EditBox Twitch (Pour copier-coller) - Uniquement slide 3
+    -- EditBox Socials (GitHub & Twitch)
     local twitchBox = CreateFrame("EditBox", nil, guideFrame, "InputBoxTemplate")
     twitchBox:SetSize(240, 20)
-    twitchBox:SetPoint("BOTTOM", 0, 80) -- Positionné en bas de page
+    twitchBox:SetPoint("BOTTOM", 0, 75)
     twitchBox:SetAutoFocus(false)
     twitchBox:SetText("https://www.twitch.tv/mao_kzu")
     twitchBox:Hide()
@@ -261,6 +315,21 @@ function addonTable.UI:CreateCustomUI(parent)
         end
     end)
     twitchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+    local githubBox = CreateFrame("EditBox", nil, guideFrame, "InputBoxTemplate")
+    githubBox:SetSize(240, 20)
+    githubBox:SetPoint("BOTTOM", 0, 100) -- Au-dessus de Twitch
+    githubBox:SetAutoFocus(false)
+    githubBox:SetText("https://github.com/maokzu/HousingCrafter")
+    githubBox:Hide()
+
+    githubBox:SetScript("OnTextChanged", function(self)
+        if self:GetText() ~= "https://github.com/maokzu/HousingCrafter" then
+            self:SetText("https://github.com/maokzu/HousingCrafter")
+            self:HighlightText()
+        end
+    end)
+    githubBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     
     -- Pagination
     local currentPage = 1
@@ -291,33 +360,31 @@ function addonTable.UI:CreateCustomUI(parent)
         prevBtn:SetEnabled(currentPage > 1)
         nextBtn:SetEnabled(currentPage < totalPages)
         
-        -- Reset TwitchBox visibility
+        -- Reset Social Visibility
         twitchBox:Hide()
+        githubBox:Hide()
         
         if currentPage == 1 then
             contentText:SetText(
-                "|cFFFFD700Chapitre I : Les Registres|r\n\n" ..
-                "Salutations, bâtisseur.\n\n" ..
-                "Pour trouver vos matériaux, utilisez les filtres :\n\n" ..
-                "- |cFF00BFFFType de Bois|r : Choisissez l'essence (Chêne, Pin...).\n\n" ..
-                "- |cFF00BFFFClassification|r : Filtrez par usage (Murs, Sols, Décorations...).\n\n" ..
-                "- |cFF00BFFFMétier|r : Ciblez les créations d'artisans (Forge, Ingénierie...)."
+                "|cFFFFD700" .. L["TITRE_REGISTRE"] .. "|r\n\n" ..
+                L["GUIDE_INTRO"] .. "\n\n" ..
+                "- |cFF00BFFF"..L["DD_BOIS"].."|r : " .. L["GUIDE_DESC_BOIS"] .. "\n\n" ..
+                "- |cFF00BFFF"..L["DD_CLASSIFICATION"].."|r : " .. L["GUIDE_DESC_CLASS"] .. "\n\n" ..
+                "- |cFF00BFFF"..L["DD_METIER"].."|r : " .. L["GUIDE_DESC_METIER"]
             )
         elseif currentPage == 2 then
             contentText:SetText(
-                "|cFFFFD700Chapitre II : Étiquettes|r\n\n" ..
-                "Organisez votre inventaire mental :\n\n" ..
-                "Faîtes un |cFF00FF00Clic-Droit|r sur n'importe quel objet de la liste pour ouvrir le gestionnaire.\n\n" ..
-                "Vous pouvez créer vos propres tags (ex: 'Cuisine', 'Projet A') et filtrer ensuite via le panneau latéral."
+                "|cFFFFD700" .. L["TITRE_ETIQUETTES"] .. "|r\n\n" ..
+                L["GUIDE_PAGE2"]
             )
         elseif currentPage == 3 then
-            twitchBox:Show() -- Afficher la box
+            twitchBox:Show()
+            githubBox:Show()
             contentText:SetText(
-                "|cFFFFD700À Propos|r\n\n" ..
-                "HousingCrafter v1.0\n" ..
-                "Développé par le Maître Artisan |cFFFFD700Mao_KZU|r.\n\n" ..
-                "Cet outil est forgé avec passion pour tous ceux qui voient des châteaux là où d'autres ne voient que des pierres.\n\n" ..
-                "Si vous souhaitez soutenir les travaux de l'Architecte, rejoignez notre conclave :"
+                "|cFFFFD700" .. L["GUIDE_TITRE_3"] .. "|r\n\n" ..
+                L["GUIDE_CREDITS"] .. "\n\n" ..
+                L["GUIDE_PASSION"] .. "\n\n" ..
+                L["GUIDE_SOCIALS"]
             )
         end
     end
@@ -350,15 +417,15 @@ function addonTable.UI:CreateCustomUI(parent)
     categoryDropdown:SetPoint("TOP", container, "TOP", 0, -60)
     
     local categories = {
-        { key = nil, name = "Toutes" },
-        { key = "FURNITURE", name = "Meubles" },
-        { key = "DECORATION", name = "Décorations" },
-        { key = "LIGHTING", name = "Éclairage" },
-        { key = "STRUCTURAL", name = "Structures" },
-        { key = "STORAGE", name = "Rangement" },
-        { key = "TEXTILE", name = "Textiles" },
-        { key = "OUTDOOR", name = "Extérieur" },
-        { key = "MISC", name = "Divers" },
+        { key = nil, name = L["DD_ALL"] },
+        { key = "FURNITURE", name = L["CAT_MEUBLES"] },
+        { key = "DECORATION", name = L["CAT_DECORATIONS"] },
+        { key = "LIGHTING", name = L["CAT_ECLAIRAGE"] },
+        { key = "STRUCTURAL", name = L["CAT_STRUCTURES"] },
+        { key = "STORAGE", name = L["CAT_RANGEMENT"] },
+        { key = "TEXTILE", name = L["CAT_TEXTILES"] },
+        { key = "OUTDOOR", name = L["CAT_EXTERIEUR"] },
+        { key = "MISC", name = L["CAT_DIVERS"] },
     }
     
     UIDropDownMenu_Initialize(categoryDropdown, function(self, level)
@@ -375,7 +442,7 @@ function addonTable.UI:CreateCustomUI(parent)
         end
     end)
     
-    UIDropDownMenu_SetText(categoryDropdown, "Classification")
+    UIDropDownMenu_SetText(categoryDropdown, L["DD_CLASSIFICATION"])
     self:RegisterText(_G[categoryDropdown:GetName().."Text"], "Normal")
     self.categoryDropdown = categoryDropdown
 
@@ -386,26 +453,37 @@ function addonTable.UI:CreateCustomUI(parent)
     professionDropdown:SetPoint("LEFT", categoryDropdown, "RIGHT", -10, 0)
 
     local professions = {
-        "Forge", "Ingénierie", "Couture", "Travail du cuir", "Calligraphie", "Joaillerie", "Alchimie", "Enchantement", "Cuisine"
+        { key = "Forge", label = L["PROF_FORGE"] },
+        { key = "Ingénierie", label = L["PROF_INGENIERIE"] },
+        { key = "Couture", label = L["PROF_COUTURE"] },
+        { key = "Travail du cuir", label = L["PROF_TDC"] },
+        { key = "Calligraphie", label = L["PROF_CALLIGRAPHIE"] },
+        { key = "Joaillerie", label = L["PROF_JOAILLERIE"] },
+        { key = "Alchimie", label = L["PROF_ALCHIMIE"] },
+        { key = "Enchantement", label = L["PROF_ENCHANTEMENT"] },
+        { key = "Cuisine", label = L["PROF_CUISINE"] }
     }
-    table.sort(professions)
-    table.insert(professions, 1, "Tous les métiers")
+    -- Tri alphabétique sur le label traduit
+    table.sort(professions, function(a, b) return a.label < b.label end)
+    
+    -- Insertion de l'option "Tous"
+    table.insert(professions, 1, { key = nil, label = L["DD_TOUT_METIER"] })
 
     UIDropDownMenu_Initialize(professionDropdown, function(self, level)
-        for _, profName in ipairs(professions) do
+        for _, profData in ipairs(professions) do
             local info = UIDropDownMenu_CreateInfo()
-            info.text = profName
-            info.arg1 = (profName ~= "Tous les métiers") and profName or nil
+            info.text = profData.label
+            info.arg1 = profData.key
             info.func = function(self, arg1)
                 addonTable.UI.selectedProfession = arg1
-                UIDropDownMenu_SetText(professionDropdown, arg1 or "Métier")
+                UIDropDownMenu_SetText(professionDropdown, profData.label)
             end
             info.checked = (addonTable.UI.selectedProfession == info.arg1)
             UIDropDownMenu_AddButton(info, level)
         end
     end)
 
-    UIDropDownMenu_SetText(professionDropdown, "Métier")
+    UIDropDownMenu_SetText(professionDropdown, L["DD_METIER"])
     self:RegisterText(_G[professionDropdown:GetName().."Text"], "Normal")
     self.professionDropdown = professionDropdown
 
@@ -421,11 +499,11 @@ function addonTable.UI:CreateCustomUI(parent)
     
     UIDropDownMenu_Initialize(dropdown, function(self, level)
         local info = UIDropDownMenu_CreateInfo()
-        info.text = "Tous les bois"
+        info.text = L["DD_TOUT_BOIS"]
         info.arg1 = nil
         info.func = function(self, arg1)
             addonTable.UI.selectedWood = arg1
-            UIDropDownMenu_SetText(dropdown, "Type de Bois")
+            UIDropDownMenu_SetText(dropdown, L["DD_BOIS"])
         end
         info.checked = (addonTable.UI.selectedWood == nil)
         UIDropDownMenu_AddButton(info, level)
@@ -436,19 +514,20 @@ function addonTable.UI:CreateCustomUI(parent)
         UIDropDownMenu_AddButton(info, level)
         
         for _, woodType in ipairs(addonTable.Database.WoodTypes) do
+            local woodName = L[woodType.localeKey] or woodType.key
             info = UIDropDownMenu_CreateInfo()
-            info.text = woodType.name
+            info.text = woodName
             info.arg1 = woodType.key
             info.func = function(self, arg1)
                 addonTable.UI.selectedWood = arg1
-                UIDropDownMenu_SetText(dropdown, woodType.name)
+                UIDropDownMenu_SetText(dropdown, woodName)
             end
             info.checked = (addonTable.UI.selectedWood == woodType.key)
             UIDropDownMenu_AddButton(info, level)
         end
     end)
     
-    UIDropDownMenu_SetText(dropdown, "Type de Bois")
+    UIDropDownMenu_SetText(dropdown, L["DD_BOIS"])
     self:RegisterText(_G[dropdown:GetName().."Text"], "Normal")
     self.dropdown = dropdown
 
@@ -457,15 +536,14 @@ function addonTable.UI:CreateCustomUI(parent)
     searchButton:SetSize(130, 30) -- Plus gros, bouton d'action principal
     -- Ligne 3 : En bas à DROITE
     searchButton:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -25, 20)
-    searchButton:SetText("Filtrer")
-    searchButton:SetText("Filtrer")
+    searchButton:SetText(L["BTN_FILTRER"])
     self:RegisterText(searchButton, "Button")
     
     searchButton:SetScript("OnClick", function()
         -- if addonTable.Debug then addonTable.Debug:Log("Bouton Filtrer (Custom) cliqué - Début séquence") end
         
         -- 1. Changer l'état du bouton pour indiquer la recherche
-        searchButton:SetText("Recherche...")
+        searchButton:SetText(L["BTN_RECHERCHE"])
         searchButton:Disable()
         addonTable.UI.isFiltering = true -- Flag pour éviter double exécution
 
@@ -495,8 +573,7 @@ function addonTable.UI:CreateCustomUI(parent)
     labelButton:SetSize(130, 26) -- Plus haut
     -- Ligne 3 : À gauche du bouton Filtrer
     labelButton:SetPoint("RIGHT", searchButton, "LEFT", -10, 0)
-    labelButton:SetText("Étiquettes")
-    labelButton:SetText("Étiquettes")
+    labelButton:SetText(L["BTN_ETIQUETTES"])
     self:RegisterText(labelButton, "Button")
     self.labelButton = labelButton
     addonTable.UI.selectedLabels = {}
@@ -520,7 +597,7 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Titre "Registre des Provenances"
     local title = labelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -15)
-    title:SetText("Registre des Provenances")
+    title:SetText(L["TITRE_REGISTRE"])
     title:SetTextColor(1, 0.82, 0) -- Jaune WoW standard
 
     -- Ligne de séparation
@@ -599,7 +676,9 @@ function addonTable.UI:CreateCustomUI(parent)
                 cb:ClearAllPoints()
                 cb:Show()
                 if _G[cb:GetName() .. "Text"] then
-                    _G[cb:GetName() .. "Text"]:SetText(labelName)
+                    local labelKey = "LABEL_" .. string.upper(labelName)
+                    local displayText = L[labelKey] or labelName
+                    _G[cb:GetName() .. "Text"]:SetText(displayText)
                 end
                 cb:SetHitRectInsets(0, -100, 0, 0)
                 
@@ -621,9 +700,9 @@ function addonTable.UI:CreateCustomUI(parent)
                     local count = 0
                     for _ in pairs(addonTable.UI.selectedLabels) do count = count + 1 end
                     if count == 0 then
-                        labelButton:SetText("Étiquettes")
+                        labelButton:SetText(L["BTN_ETIQUETTES"])
                     else
-                        labelButton:SetText("Étiquettes (" .. count .. ")")
+                        labelButton:SetText(L["BTN_ETIQUETTES"] .. " (" .. count .. ")")
                     end
                 end)
                 
@@ -641,14 +720,14 @@ function addonTable.UI:CreateCustomUI(parent)
         
         if hasCustom then
             -- Section 1 : Custom
-            AddHeader("Archives Personnelles")
+            AddHeader(L["SECTION_ARCHIVES_PERSO"])
             AddLabelGrid(customLabels)
             
             -- Séparateur visuel (optionnel, déjà géré par l'espace)
             currentY = currentY - 10 
             
             -- Section 2 : Standard
-            AddHeader("Registre des Provenances")
+            AddHeader(L["SECTION_REGISTRE_STD"])
             AddLabelGrid(standardLabels)
         else
             -- Pas de custom : Juste la grille standard
@@ -694,14 +773,14 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Texte centré par rapport au reste
     local loadingText = loadingPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     loadingText:SetPoint("LEFT", gearIcon, "RIGHT", 15, 0) -- À droite de l'engrenage
-    loadingText:SetText("|cFFFFD700Traitement...|r") -- Plus court pour le style
+    loadingText:SetText("|cFFFFD700" .. L["BTN_RECHERCHE"] .. "|r")
     
     -- Bouton de fermeture manuelle (Croix)
     local closeLoading = CreateFrame("Button", nil, loadingPopup, "UIPanelCloseButton")
     closeLoading:SetPoint("TOPRIGHT", loadingPopup, "TOPRIGHT", -5, -5)
     closeLoading:SetScript("OnClick", function()
         loadingPopup:Hide()
-        if self.searchButton then self.searchButton:Enable() self.searchButton:SetText("Filtrer") end
+        if self.searchButton then self.searchButton:Enable() self.searchButton:SetText(L["BTN_FILTRER"]) end
     end)
     
     self.loadingPopup = loadingPopup
@@ -732,7 +811,7 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Modification du bouton Search pour afficher la popup
     searchButton:SetScript("OnClick", function()
         -- 1. Feedback Visuel Immédiat
-        searchButton:SetText("Recherche...")
+        searchButton:SetText(L["BTN_RECHERCHE"])
         searchButton:Disable()
         loadingPopup:Show() -- AFFICHER LA POPUP
         
@@ -1011,14 +1090,14 @@ if not HousingHDVLabelPopup then
     -- Titre
     local title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge") -- Titre plus grand
     title:SetPoint("TOP", 0, -5) -- Ajusté pour le header
-    title:SetText("Gérer les Étiquettes")
+    title:SetText(L["TITRE_ETIQUETTES"])
     popup.title = title
     addonTable.UI:RegisterText(title, "Header")
     
     -- Nom de l'objet (Sous-titre élégant)
     local itemName = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
     itemName:SetPoint("TOP", title, "BOTTOM", 0, -10)
-    itemName:SetText("Nom de l'objet")
+    itemName:SetText("...")
     popup.itemName = itemName
     addonTable.UI:RegisterText(itemName, "Normal")
     
@@ -1037,9 +1116,7 @@ if not HousingHDVLabelPopup then
     local addButton = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
     addButton:SetSize(90, 24)
     addButton:SetPoint("LEFT", editBox, "RIGHT", 8, 0)
-    addButton:SetText("Ajouter")
-    popup.addButton = addButton
-    addButton:SetText("Ajouter")
+    addButton:SetText(L["BTN_AJOUTER"])
     popup.addButton = addButton
     addonTable.UI:RegisterText(addButton, "Button")
     
@@ -1064,7 +1141,7 @@ if not HousingHDVLabelPopup then
     local closeButton = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
     closeButton:SetSize(100, 22)
     closeButton:SetPoint("BOTTOM", 0, 15)
-    closeButton:SetText("Fermer")
+    closeButton:SetText(L["BTN_FERMER"])
     closeButton:SetScript("OnClick", function() popup:Hide() end)
     
     addonTable.UI.LabelPopup = popup
@@ -1147,11 +1224,13 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
                            local count = 0
                            for _ in pairs(addonTable.UI.selectedLabels) do count = count + 1 end
                            if addonTable.UI.labelButton then
-                                if count == 0 then
-                                    addonTable.UI.labelButton:SetText("Étiquettes")
-                                else
-                                    addonTable.UI.labelButton:SetText("Étiquettes (" .. count .. ")")
-                                end
+    if addonTable.UI.labelButton then
+        if count == 0 then
+            addonTable.UI.labelButton:SetText(L["BTN_ETIQUETTES"])
+        else
+            addonTable.UI.labelButton:SetText(L["BTN_ETIQUETTES"] .. " (" .. count .. ")")
+        end
+    end
                            end
                        end
 
@@ -1229,14 +1308,14 @@ function addonTable.UI:CreateAccessPopup()
     -- Titre "Accessibilité"
     local title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", 0, -10)
-    title:SetText("Accessibilité")
+    title:SetText(L["TITRE_ACCESSIBILITE"])
     title:SetTextColor(1, 0.82, 0)
     self:RegisterText(title, "Header")
 
     -- SECTION 1 : ECHELLE (ZOOM)
     local zoomTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     zoomTitle:SetPoint("TOPLEFT", 15, -40)
-    zoomTitle:SetText("Taille Fenêtre")
+    zoomTitle:SetText(L["OPT_TAILLE_FENETRE"])
     self:RegisterText(zoomTitle, "Normal")
     
     local scaleVal = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1288,7 +1367,7 @@ function addonTable.UI:CreateAccessPopup()
     
     local typoTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     typoTitle:SetPoint("TOPLEFT", 15, -95)
-    typoTitle:SetText("Texte Large")
+    typoTitle:SetText(L["OPT_TEXTE_LARGE"])
     self:RegisterText(typoTitle, "Normal")
     
     local typoCheck = CreateFrame("CheckButton", nil, popup, "ChatConfigCheckButtonTemplate")
@@ -1309,7 +1388,7 @@ function addonTable.UI:CreateAccessPopup()
     
     local themeLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     themeLabel:SetPoint("TOP", 0, -145)
-    themeLabel:SetText("Thème")
+    themeLabel:SetText(L["OPT_THEME"])
     self:RegisterText(themeLabel, "Normal")
     
     local currentThemeKey = HousingCrafterDB.Theme or "Gold"
@@ -1365,7 +1444,7 @@ function addonTable.UI:CreateAccessPopup()
     
     local opacityLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     opacityLabel:SetPoint("TOPLEFT", 15, -195)
-    opacityLabel:SetText("Transparence")
+    opacityLabel:SetText(L["OPT_TRANSPARENCE"])
     self:RegisterText(opacityLabel, "Normal")
     
     local opacitySlider = CreateFrame("Slider", "HousingHDVOpacitySlider", popup, "OptionsSliderTemplate")
@@ -1386,7 +1465,7 @@ function addonTable.UI:CreateAccessPopup()
     local resetBtn = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
     resetBtn:SetSize(120, 22)
     resetBtn:SetPoint("BOTTOM", 0, 35)
-    resetBtn:SetText("Réinitialiser")
+    resetBtn:SetText(L["BTN_RESET"])
     self:RegisterText(resetBtn, "Small")
     
     resetBtn:SetScript("OnClick", function()

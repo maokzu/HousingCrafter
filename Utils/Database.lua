@@ -5,17 +5,17 @@ addonTable.Database = {}
 
 -- Types de bois disponibles (Mapping 1 Bois = 1 Extension)
 addonTable.Database.WoodTypes = {
-    { key = "DORNIC", name = "Épicéa de Dornic (The War Within)" },
-    { key = "DRAGONPINE", name = "Pin-des-dragons (Dragonflight)" },
-    { key = "ARDEN", name = "Bois d'Arden (Shadowlands)" },
-    { key = "DARKPINE", name = "Sombrepin (BFA)" },
-    { key = "FELTOUCHED", name = "Bois touché par la corruption (Legion)" },
-    { key = "SHADOWMOON", name = "Ombrelune (WoD)" },
-    { key = "BAMBOO", name = "Bambou (Pandaria)" },
-    { key = "ASHWOOD", name = "Bois de frêne (Cataclysm)" },
-    { key = "COLDWIND", name = "Bois de Vent-froid (WotLK)" },
-    { key = "OLEMBA", name = "Olemba (TBC)" },
-    { key = "IRONWOOD", name = "Bois-de-fer (Classic)" },
+    { key = "DORNIC", localeKey = "BOIS_DORNIC" },
+    { key = "DRAGONPINE", localeKey = "BOIS_DRAGONPINE" },
+    { key = "ARDEN", localeKey = "BOIS_ARDEN" },
+    { key = "DARKPINE", localeKey = "BOIS_DARKPINE" },
+    { key = "FELTOUCHED", localeKey = "BOIS_FELTOUCHED" },
+    { key = "SHADOWMOON", localeKey = "BOIS_SHADOWMOON" },
+    { key = "BAMBOO", localeKey = "BOIS_BAMBOO" },
+    { key = "ASHWOOD", localeKey = "BOIS_ASHWOOD" },
+    { key = "COLDWIND", localeKey = "BOIS_COLDWIND" },
+    { key = "OLEMBA", localeKey = "BOIS_OLEMBA" },
+    { key = "IRONWOOD", localeKey = "BOIS_IRONWOOD" },
 }
 
 -- Base de données structurée par Type de Bois (Extension)
