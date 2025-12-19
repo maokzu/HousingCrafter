@@ -1,5 +1,52 @@
 # HousingCrafter
 
+**HousingCrafter** is a World of Warcraft addon designed for Housing and decoration enthusiasts. It transforms the Crafting Orders interface to make searching for furniture, decorations, and structures easier.
+
+## 🏗️ Main Features
+
+### 🔍 Advanced Filtering
+No more getting lost in thousands of recipes!
+*   **Filter by Wood (Expansion)**: Quickly find themed items (e.g., "Dragonpine" for Dragonflight, "Ironwood" for Classic).
+*   **Classification**: Filter by specific use (Furniture, Lighting, Structures, Outdoor...).
+*   **By Profession**: Target specific creations from Blacksmithing, Tailoring, Engineering, etc.
+
+### 🏷️ Label Manager (New!)
+Organize your "mental inventory" with the **Provenance Registry**.
+*   **Right-Click** on any item in the list to open the menu.
+*   **Custom Labels**: Create your own tags (e.g., "Kitchen", "Castle Project", "To Farm").
+*   **Multi-Criteria Filtering**: Combine your labels to find your selections in a flash.
+
+### 📘 Architect's Guide
+An immersive in-game tutorial (quest journal style) explains all features. Click the `?` button to open it.
+
+### ✨ Premium Interface
+*   Polished design respecting WoW's visual style (Golden borders, textured backgrounds).
+*   Smooth animations and visual feedback.
+*   "Immersive" mode with themed backgrounds (Dark Iron Stone, Void, etc.).
+
+## 🚀 Installation
+
+1.  Download the latest version from [Releases](https://github.com/maokzu/HousingCrafter/releases).
+2.  Extract the `HousingCrafter` folder to your addons directory:
+    *   `World of Warcraft/_retail_/Interface/AddOns/`
+3.  Launch the game!
+
+## 🛠️ Commands
+
+*   `/hcdebug`: Opens the log window for debugging (Developer).
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an Issue or Pull Request to suggest recipe additions or new features.
+
+## 📜 Author
+
+Developed with passion by **Mao_KZU**.
+
+---
+
+# HousingCrafter (Français)
+
 **HousingCrafter** est un addon World of Warcraft conçu pour les passionnés de Housing et de décoration. Il transforme l'interface de Commandes d'Artisanat pour faciliter la recherche de meubles, de décorations et de structures.
 
 ## 🏗️ Fonctionnalités Principales
@@ -44,4 +91,4 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une Issue ou un
 Développé avec passion par **Mao_KZU**.
 
 ---
-*HousingCrafter n'est pas affilié à Blizzard Entertainment.*
+*HousingCrafter is not affiliated with Blizzard Entertainment.*
