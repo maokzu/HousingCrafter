@@ -15,6 +15,8 @@ L["BTN_ETIQUETTES"] = "Tengwar" -- Lettres (Étiquettes)
 L["BTN_AJOUTER"] = "Ono-" -- Ajouter/Créer
 L["BTN_FERMER"] = "Holta" -- Fermer
 L["BTN_RESET"] = "Enwu" -- Recommencer (Reset)
+L["ITEM_INCONNU"] = "Mani?"
+L["SUFFIX_PERSO"] = "(Vëa)"
 
 -- DROPDOWNS
 L["DD_CLASSIFICATION"] = "Nossë" -- Clan/Famille (Classification)

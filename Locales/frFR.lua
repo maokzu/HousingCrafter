@@ -15,6 +15,8 @@ L["BTN_ETIQUETTES"] = "Étiquettes"
 L["BTN_AJOUTER"] = "Ajouter"
 L["BTN_FERMER"] = "Fermer"
 L["BTN_RESET"] = "Réinitialiser"
+L["ITEM_INCONNU"] = "Objet Inconnu"
+L["SUFFIX_PERSO"] = "(Perso)"
 
 -- DROPDOWNS
 L["DD_CLASSIFICATION"] = "Classification"

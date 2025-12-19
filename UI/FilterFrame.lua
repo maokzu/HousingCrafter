@@ -167,7 +167,7 @@ function addonTable.UI:CreateCustomUI(parent)
     headerBg:SetSize(570, 64) -- Largeur adjustée (Titre Long)
     headerBg:SetPoint("TOP", container, "TOP", 0, 12) -- Chevauche le bord supérieur
     
-    -- Label "HousingHDV" (Titre Centré sur le Header)
+    -- Label "HousingCrafter" (Titre Centré sur le Header)
     local label = container:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     label:SetPoint("TOP", headerBg, "TOP", 0, -12) -- Centré verticalement
     label:SetText(L["TITRE_PRINCIPAL"])
@@ -1143,6 +1143,7 @@ if not HousingHDVLabelPopup then
     closeButton:SetPoint("BOTTOM", 0, 15)
     closeButton:SetText(L["BTN_FERMER"])
     closeButton:SetScript("OnClick", function() popup:Hide() end)
+    popup.closeButton = closeButton
     
     addonTable.UI.LabelPopup = popup
 end
@@ -1151,7 +1152,24 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
     local popup = self.LabelPopup
     popup.itemID = itemID
     
-    popup.itemName:SetText(name or "Objet Inconnu")
+    if not name or name == "" or name == L["ITEM_INCONNU"] then
+        local itemName, _, quality = GetItemInfo(itemID)
+        if itemName then
+           name = itemName
+           -- Apply quality color if available
+           if quality then
+               local r, g, b = GetItemQualityColor(quality)
+               popup.itemName:SetTextColor(r, g, b)
+           end
+        end
+    end
+
+    popup.itemName:SetText(name or L["ITEM_INCONNU"])
+    
+    -- Update static texts (in case language changed)
+    popup.title:SetText(L["TITRE_ETIQUETTES"])
+    popup.addButton:SetText(L["BTN_AJOUTER"])
+    if popup.closeButton then popup.closeButton:SetText(L["BTN_FERMER"]) end
     popup.editBox:SetText("")
     
     local function RefreshLabels()
@@ -1254,7 +1272,7 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
             end
             
             if l.isCustom then
-                f.text:SetText(l.name .. "  |cFF00FF00(Perso)|r") -- Indication plus propre
+                f.text:SetText(l.name .. "  |cFF00FF00" .. L["SUFFIX_PERSO"] .. "|r")
                 f.delBtn:Show()
             else
                 f.text:SetText(l.name)
