@@ -3,6 +3,68 @@ local _, addonTable = ...
 local L = addonTable.L
 addonTable.UI = {}
 
+
+addonTable.UI.Themes = {
+    ["Gold"] = { 
+        name = "Classique (Or)", 
+        texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background.tga",
+        colors = { 
+            Title = {1, 0.82, 0}, 
+            Header = {1, 0.82, 0},
+            Normal = {1, 1, 1},
+            Button = {1, 0.82, 0}, -- Texte bouton jaune par défaut
+            Small = {0.8, 0.8, 0.8},
+            Content = {1, 1, 1}
+        } 
+    },
+    ["Stone"] = { 
+        name = "Pierre Sombrefer", 
+        texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background_Stone.tga",
+        colors = { 
+            Title = {1, 1, 1}, -- Blanc pur pour contraste max sur pierre foncée
+            Header = {1, 0.7, 0.2}, -- Orange Magma
+            Normal = {0.9, 0.9, 0.9},
+            Button = {1, 1, 1},
+            Small = {0.7, 0.7, 0.7},
+            Content = {0.9, 0.9, 0.9}
+        }
+    },
+    ["Void"] = { 
+        name = "Néant", 
+        texture = "Interface\\AddOns\\HousingCrafter\\Media\\Background_Void.tga",
+        colors = { 
+            Title = {0.7, 0.4, 0.9}, -- Violet Néant
+            Header = {0.8, 0.6, 1},
+            Normal = {0.9, 0.9, 1}, -- Blanc bleuté
+            Button = {0.8, 0.6, 1},
+            Small = {0.6, 0.6, 0.8},
+            Content = {0.9, 0.9, 1}
+        }
+    },
+}
+addonTable.UI.ThemeOrder = { "Gold", "Stone", "Void" }
+
+function addonTable.UI:ApplyTheme()
+    local themeKey = HousingCrafterDB.Theme or "Gold"
+    local theme = self.Themes[themeKey] or self.Themes["Gold"]
+    local opacity = HousingCrafterDB.Opacity or 1.0
+    
+    if self.container then
+        self.container:SetBackdrop({
+            bgFile = theme.texture,
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+            tile = true,
+            tileSize = 256,
+            edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        })
+        self.container:SetBackdropColor(1, 1, 1, opacity)
+        self.container:SetBackdropBorderColor(1, 1, 1, 1)
+    end
+    
+    self:UpdateVisuals() -- Mettre à jour les couleurs quand le thème change
+end
+
 function addonTable.UI:Init()
     local parentFrame = ProfessionsCustomerOrdersFrame
     if not parentFrame then
@@ -11,6 +73,62 @@ function addonTable.UI:Init()
 
     self:CreateCustomUI(parentFrame)
     self:HookNativeDataProvider(parentFrame)
+end
+
+function addonTable.UI:RegisterText(obj, styleType)
+    if not self.texts then self.texts = {} end
+    if obj then
+        -- Détection du type : Est-ce un bouton ou un simple FontString ?
+        local isButton = obj.SetNormalFontObject and true or false
+        table.insert(self.texts, { obj = obj, type = styleType, isButton = isButton })
+    end
+end
+
+function addonTable.UI:UpdateVisuals()
+    local useLarge = HousingCrafterDB.UseLargeText
+    local themeKey = HousingCrafterDB.Theme or "Gold"
+    local colors = self.Themes[themeKey].colors or self.Themes["Gold"].colors
+    
+    local map = {
+        ["Title"]   = { n="GameFontNormalHuge", l="GameFontNormalHuge" }, 
+        ["Header"]  = { n="GameFontNormalLarge", l="GameFontNormalHuge" },
+        ["Normal"]  = { n="GameFontNormal", l="GameFontNormalLarge" },
+        ["Button"]  = { n="GameFontNormal", l="GameFontNormalLarge" }, 
+        ["Small"]   = { n="GameFontHighlightSmall", l="GameFontHighlightMedium" },
+        ["Content"] = { n="GameFontHighlightMedium", l="GameFontHighlightLarge" },
+    }
+
+    if not self.texts then return end
+    
+    for _, entry in ipairs(self.texts) do
+        local style = map[entry.type]
+        if style and entry.obj then
+            -- 1. Font Size
+            local fontName = useLarge and style.l or style.n
+            
+            -- 2. Color
+            local color = colors[entry.type] or {1, 1, 1}
+            local r, g, b = unpack(color)
+            
+            if entry.isButton then
+                entry.obj:SetNormalFontObject(fontName)
+                entry.obj:SetHighlightFontObject(fontName)
+                entry.obj:SetDisabledFontObject(fontName)
+                
+                -- Les boutons gèrent leurs couleurs différemment (souvent via SetTextColor sur le FontString interne)
+                -- Mais SetNormalFontObject écrase souvent, donc on applique explicitement si possible
+                local fs = entry.obj:GetFontString()
+                if fs then fs:SetTextColor(r, g, b) end
+                
+                if entry.obj.GetText and entry.obj:GetText() then
+                    entry.obj:SetText(entry.obj:GetText())
+                end
+            else
+                entry.obj:SetFontObject(fontName)
+                entry.obj:SetTextColor(r, g, b)
+            end
+        end
+    end
 end
 
 function addonTable.UI:CreateCustomUI(parent)
@@ -24,16 +142,12 @@ function addonTable.UI:CreateCustomUI(parent)
     container:SetPoint("BOTTOM", parent, "TOP", 0, 8)
     
     -- Fond avec style WoW "Premium" (Custom Background)
-    container:SetBackdrop({
-        bgFile = "Interface\\AddOns\\HousingCrafter\\Media\\Background.tga", -- Texture utilisateur
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border", -- Bordure Or
-        tile = true,
-        tileSize = 256,
-        edgeSize = 32,
-        insets = { left = 11, right = 12, top = 12, bottom = 11 }
-    })
-    container:SetBackdropColor(1, 1, 1, 1) -- Blanc pour afficher la texture telle quelle (Opaque)
-    container:SetBackdropBorderColor(1, 1, 1, 1)
+    -- Initialisation via ApplyTheme plus bas
+    
+    -- Appliquer l'échelle sauvegardée
+    if HousingCrafterDB and HousingCrafterDB.Scale then
+        container:SetScale(HousingCrafterDB.Scale)
+    end
     
     -- Rendre la fenêtre déplaçable
     container:SetMovable(true)
@@ -45,6 +159,7 @@ function addonTable.UI:CreateCustomUI(parent)
 
     
     self.container = container
+    self.texts = {} -- Initialisation du registre de textes
     
     -- Header Background (Style WoW Classique)
     local headerBg = container:CreateTexture(nil, "ARTWORK")
@@ -56,8 +171,34 @@ function addonTable.UI:CreateCustomUI(parent)
     local label = container:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     label:SetPoint("TOP", headerBg, "TOP", 0, -12) -- Centré verticalement
     label:SetText("|cFFFFD700Registre de l'Architecte|r")
+    self:RegisterText(label, "Title")
     label:SetShadowOffset(1, -1)
     
+    -- Bouton Accessibilité (Engrenage)
+    local accessButton = CreateFrame("Button", "HousingHDVAccessButton", container)
+    accessButton:SetSize(24, 24)
+    accessButton:SetPoint("TOPRIGHT", container, "TOPRIGHT", -45, -15) -- À gauche du bouton Info
+    accessButton:SetNormalTexture("Interface\\WorldMap\\Gear_64")
+    accessButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    accessButton:GetNormalTexture():SetTexCoord(0, 0.5, 0, 0.5) -- Partie gauche de la texture Gear
+    
+    accessButton:SetScript("OnClick", function()
+        if not addonTable.UI.AccessPopup then
+            addonTable.UI:CreateAccessPopup()
+        end
+        local popup = addonTable.UI.AccessPopup
+        if popup:IsShown() then popup:Hide() else popup:Show() end
+    end)
+    
+    -- Tooltip pour Accessibilité
+    accessButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Accessibilité")
+        GameTooltip:AddLine("Options d'affichage et de confort.", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    accessButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
     -- Bouton Info / Guide (Point d'entrée)
     local infoButton = CreateFrame("Button", "HousingHDVInfoButton", container)
     infoButton:SetSize(24, 24)
@@ -94,6 +235,7 @@ function addonTable.UI:CreateCustomUI(parent)
     guideTitle:SetPoint("TOP", 0, -25)
     guideTitle:SetText("Guide de l'Architecte")
     guideTitle:SetTextColor(1, 0.82, 0, 1) -- Jaune WoW
+    self:RegisterText(guideTitle, "Header")
     
     -- Zone de Contenu Texte (Blanc)
     local contentText = guideFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium") -- Police plus lisible
@@ -102,6 +244,7 @@ function addonTable.UI:CreateCustomUI(parent)
     contentText:SetJustifyH("LEFT")
     contentText:SetJustifyV("TOP")
     contentText:SetTextColor(1, 1, 1, 1) -- Blanc
+    self:RegisterText(contentText, "Content")
     
     -- EditBox Twitch (Pour copier-coller) - Uniquement slide 3
     local twitchBox = CreateFrame("EditBox", nil, guideFrame, "InputBoxTemplate")
@@ -126,6 +269,7 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Indicateur Page
     local pageNum = guideFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     pageNum:SetPoint("BOTTOM", 0, 25)
+    self:RegisterText(pageNum, "Normal")
     
     -- Flèches Navigation
     local prevBtn = CreateFrame("Button", nil, guideFrame)
@@ -232,6 +376,7 @@ function addonTable.UI:CreateCustomUI(parent)
     end)
     
     UIDropDownMenu_SetText(categoryDropdown, "Classification")
+    self:RegisterText(_G[categoryDropdown:GetName().."Text"], "Normal")
     self.categoryDropdown = categoryDropdown
 
     -- Dropdown "Métier" (À DROITE du Pivot)
@@ -261,6 +406,7 @@ function addonTable.UI:CreateCustomUI(parent)
     end)
 
     UIDropDownMenu_SetText(professionDropdown, "Métier")
+    self:RegisterText(_G[professionDropdown:GetName().."Text"], "Normal")
     self.professionDropdown = professionDropdown
 
     -- Dropdown "Type de Bois" (À GAUCHE du Pivot)
@@ -303,6 +449,7 @@ function addonTable.UI:CreateCustomUI(parent)
     end)
     
     UIDropDownMenu_SetText(dropdown, "Type de Bois")
+    self:RegisterText(_G[dropdown:GetName().."Text"], "Normal")
     self.dropdown = dropdown
 
     -- Bouton "Filtrer" - Applique le filtre manuellement (Action Principale)
@@ -311,6 +458,8 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Ligne 3 : En bas à DROITE
     searchButton:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -25, 20)
     searchButton:SetText("Filtrer")
+    searchButton:SetText("Filtrer")
+    self:RegisterText(searchButton, "Button")
     
     searchButton:SetScript("OnClick", function()
         -- if addonTable.Debug then addonTable.Debug:Log("Bouton Filtrer (Custom) cliqué - Début séquence") end
@@ -347,6 +496,9 @@ function addonTable.UI:CreateCustomUI(parent)
     -- Ligne 3 : À gauche du bouton Filtrer
     labelButton:SetPoint("RIGHT", searchButton, "LEFT", -10, 0)
     labelButton:SetText("Étiquettes")
+    labelButton:SetText("Étiquettes")
+    self:RegisterText(labelButton, "Button")
+    self.labelButton = labelButton
     addonTable.UI.selectedLabels = {}
 
     -- Création du panneau de sélection (Caché par défaut)
@@ -439,6 +591,9 @@ function addonTable.UI:CreateCustomUI(parent)
                     local cbName = "HousingHDVLabelCheckButton"..checkboxIndex
                     cb = CreateFrame("CheckButton", cbName, scrollChild, "ChatConfigCheckButtonTemplate")
                     labelFrame.checkboxes[checkboxIndex] = cb
+                    if _G[cbName.."Text"] then
+                        addonTable.UI:RegisterText(_G[cbName.."Text"], "Normal")
+                    end
                 end
                 
                 cb:ClearAllPoints()
@@ -571,6 +726,7 @@ function addonTable.UI:CreateCustomUI(parent)
         if guideFrame then guideFrame:Hide() end
         if labelFrame then labelFrame:Hide() end
         if addonTable.UI.LabelPopup then addonTable.UI.LabelPopup:Hide() end
+        if addonTable.UI.AccessPopup then addonTable.UI.AccessPopup:Hide() end
     end)
     
     -- Modification du bouton Search pour afficher la popup
@@ -601,6 +757,12 @@ function addonTable.UI:CreateCustomUI(parent)
              end
         end)
     end)
+    
+    -- Init Typography
+    self:UpdateVisuals()
+    
+    -- Init Theme
+    self:ApplyTheme()
 end
 
 -- Hook sur le DataProvider natif pour filtrer après insertion
@@ -851,12 +1013,14 @@ if not HousingHDVLabelPopup then
     title:SetPoint("TOP", 0, -5) -- Ajusté pour le header
     title:SetText("Gérer les Étiquettes")
     popup.title = title
+    addonTable.UI:RegisterText(title, "Header")
     
     -- Nom de l'objet (Sous-titre élégant)
     local itemName = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
     itemName:SetPoint("TOP", title, "BOTTOM", 0, -10)
     itemName:SetText("Nom de l'objet")
     popup.itemName = itemName
+    addonTable.UI:RegisterText(itemName, "Normal")
     
     -- Zone d'ajout centrée
     -- Groupe total : Input (200) + Espace (8) + Bouton (90) = 298px
@@ -875,6 +1039,9 @@ if not HousingHDVLabelPopup then
     addButton:SetPoint("LEFT", editBox, "RIGHT", 8, 0)
     addButton:SetText("Ajouter")
     popup.addButton = addButton
+    addButton:SetText("Ajouter")
+    popup.addButton = addButton
+    addonTable.UI:RegisterText(addButton, "Button")
     
     -- Séparateur Orné
     local separator = popup:CreateTexture(nil, "ARTWORK")
@@ -944,6 +1111,7 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
                 
                 f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                 f.text:SetPoint("LEFT", 8, 0)
+                addonTable.UI:RegisterText(f.text, "Small")
                 
                 -- Bouton Supprimer (X)
                 f.delBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
@@ -953,13 +1121,41 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
                    local parentLabel = self:GetParent().labelName
                    if parentLabel then
                        addonTable.Database:RemoveCustomLabel(popup.itemID, parentLabel)
-                       RefreshLabels()
-                       -- Rafraîchir la fenêtre principale si ouverte pour voir le changement immédiat
-                       if HousingHDVLabelSelector and HousingHDVLabelSelector:IsShown() then
-                            -- TODO: Un moyen plus propre de refresh ?
-                            -- Pour l'instant on force le refresh en fermant/rouvrant (rapide ou hacky)
-                            -- Ou mieux : appeler RefreshLabelList s'il est exposé (il est local pour l'instant)
+                       
+                       -- FIX: Vérifier si l'étiquette est orpheline (plus utilisée nulle part)
+                       local allLabels = addonTable.Database:GetAllLabels()
+                       local exists = false
+                       for _, l in ipairs(allLabels) do
+                           if l == parentLabel then 
+                               exists = true 
+                               break 
+                           end
                        end
+                       
+                       -- Si elle n'existe plus, on retire le filtre actif correspondant
+                       if not exists and addonTable.UI.selectedLabels and addonTable.UI.selectedLabels[parentLabel] then
+                           addonTable.UI.selectedLabels[parentLabel] = nil
+                           addonTable.UI:ApplyFilters() -- Met à jour la liste principale (Correction nom fonction)
+                           
+                           -- Force refresh du Sélecteur d'étiquettes s'il est ouvert
+                           if HousingHDVLabelSelector and HousingHDVLabelSelector:IsShown() then
+                                HousingHDVLabelSelector:Hide()
+                                HousingHDVLabelSelector:Show()
+                           end
+                           
+                           -- Mise à jour du texte du bouton Étiquettes
+                           local count = 0
+                           for _ in pairs(addonTable.UI.selectedLabels) do count = count + 1 end
+                           if addonTable.UI.labelButton then
+                                if count == 0 then
+                                    addonTable.UI.labelButton:SetText("Étiquettes")
+                                else
+                                    addonTable.UI.labelButton:SetText("Étiquettes (" .. count .. ")")
+                                end
+                           end
+                       end
+
+                       RefreshLabels()
                    end
                 end)
                 
@@ -1009,5 +1205,218 @@ function addonTable.UI:ShowLabelManagementPopup(itemID, name)
 
     RefreshLabels()
     popup:Show()
+end
+
+function addonTable.UI:CreateAccessPopup()
+    local container = self.container
+    if not container then return end
+
+    local popup = CreateFrame("Frame", "HousingHDVAccessPopup", container, "BackdropTemplate")
+    popup:SetSize(220, 300) -- Hauteur encore augmentée pour Opacité et Reset
+    popup:SetPoint("TOPRIGHT", container, "TOPRIGHT", -10, -50) -- Sous le bouton engrenage
+    popup:SetFrameStrata("DIALOG")
+    popup:SetFrameLevel(105)
+    
+    popup:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+        tile = true, tileSize = 32, edgeSize = 16,
+        insets = { left = 5, right = 5, top = 5, bottom = 5 }
+    })
+    popup:SetBackdropColor(0, 0, 0, 1) -- Noir Opaque
+    popup:Hide()
+    
+    -- Titre "Accessibilité"
+    local title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOP", 0, -10)
+    title:SetText("Accessibilité")
+    title:SetTextColor(1, 0.82, 0)
+    self:RegisterText(title, "Header")
+
+    -- SECTION 1 : ECHELLE (ZOOM)
+    local zoomTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    zoomTitle:SetPoint("TOPLEFT", 15, -40)
+    zoomTitle:SetText("Taille Fenêtre")
+    self:RegisterText(zoomTitle, "Normal")
+    
+    local scaleVal = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    scaleVal:SetPoint("TOPRIGHT", -15, -40)
+    scaleVal:SetText(math.floor(container:GetScale() * 100) .. "%")
+    
+    local function UpdateScaleDisplay()
+        scaleVal:SetText(math.floor(container:GetScale() * 100) .. "%")
+    end
+
+    local scaleDown = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    scaleDown:SetSize(30, 24)
+    scaleDown:SetPoint("TOPLEFT", zoomTitle, "BOTTOMLEFT", 0, -5)
+    scaleDown:SetText("-")
+    self:RegisterText(scaleDown, "Button")
+    
+    local scaleUp = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    scaleUp:SetSize(30, 24)
+    scaleUp:SetPoint("LEFT", scaleDown, "RIGHT", 5, 0)
+    scaleUp:SetText("+")
+    self:RegisterText(scaleUp, "Button")
+    
+    scaleDown:SetScript("OnClick", function()
+        local current = container:GetScale()
+        if current > 0.8 then
+            local newScale = current - 0.1
+            container:SetScale(newScale)
+            HousingCrafterDB.Scale = newScale
+            UpdateScaleDisplay()
+        end
+    end)
+    
+    scaleUp:SetScript("OnClick", function()
+        local current = container:GetScale()
+        if current < 1.5 then
+            local newScale = current + 0.1
+            container:SetScale(newScale)
+            HousingCrafterDB.Scale = newScale
+            UpdateScaleDisplay()
+        end
+    end)
+    
+    -- SECTION 2 : TYPOGRAPHIE
+    local separator = popup:CreateTexture(nil, "ARTWORK")
+    separator:SetHeight(1)
+    separator:SetColorTexture(0.3, 0.3, 0.3, 1)
+    separator:SetPoint("TOPLEFT", 10, -85)
+    separator:SetPoint("TOPRIGHT", -10, -85)
+    
+    local typoTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    typoTitle:SetPoint("TOPLEFT", 15, -95)
+    typoTitle:SetText("Texte Large")
+    self:RegisterText(typoTitle, "Normal")
+    
+    local typoCheck = CreateFrame("CheckButton", nil, popup, "ChatConfigCheckButtonTemplate")
+    typoCheck:SetPoint("TOPRIGHT", -15, -93)
+    typoCheck:SetChecked(HousingCrafterDB.UseLargeText)
+    
+    typoCheck:SetScript("OnClick", function()
+        HousingCrafterDB.UseLargeText = not HousingCrafterDB.UseLargeText
+        addonTable.UI:UpdateVisuals()
+    end)
+
+    -- SECTION 3 : THEME
+    local sep2 = popup:CreateTexture(nil, "ARTWORK")
+    sep2:SetHeight(1)
+    sep2:SetColorTexture(0.3, 0.3, 0.3, 1)
+    sep2:SetPoint("TOPLEFT", 10, -135)
+    sep2:SetPoint("TOPRIGHT", -10, -135)
+    
+    local themeLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    themeLabel:SetPoint("TOP", 0, -145)
+    themeLabel:SetText("Thème")
+    self:RegisterText(themeLabel, "Normal")
+    
+    local currentThemeKey = HousingCrafterDB.Theme or "Gold"
+    local themeVal = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    themeVal:SetPoint("TOP", 0, -165)
+    themeVal:SetText(addonTable.UI.Themes[currentThemeKey].name)
+    
+    -- Fonction pour trouver l'index actuel
+    local function GetThemeIndex(key)
+        for i, k in ipairs(addonTable.UI.ThemeOrder) do
+            if k == key then return i end
+        end
+        return 1
+    end
+    
+    local function SetThemeByIndex(index)
+        local count = #addonTable.UI.ThemeOrder
+        if index > count then index = 1 end
+        if index < 1 then index = count end
+        
+        local newKey = addonTable.UI.ThemeOrder[index]
+        HousingCrafterDB.Theme = newKey
+        themeVal:SetText(addonTable.UI.Themes[newKey].name)
+        addonTable.UI:ApplyTheme()
+    end
+
+    local prevTheme = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    prevTheme:SetSize(20, 20)
+    prevTheme:SetPoint("RIGHT", themeVal, "LEFT", -10, 0)
+    prevTheme:SetText("<")
+    self:RegisterText(prevTheme, "Button")
+    
+    local nextTheme = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    nextTheme:SetSize(20, 20)
+    nextTheme:SetPoint("LEFT", themeVal, "RIGHT", 10, 0)
+    nextTheme:SetText(">")
+    self:RegisterText(nextTheme, "Button")
+    
+    prevTheme:SetScript("OnClick", function()
+        SetThemeByIndex(GetThemeIndex(HousingCrafterDB.Theme) - 1)
+    end)
+    
+    nextTheme:SetScript("OnClick", function()
+        SetThemeByIndex(GetThemeIndex(HousingCrafterDB.Theme) + 1)
+    end)
+    
+    -- SECTION 4 : OPACITE
+    local sep3 = popup:CreateTexture(nil, "ARTWORK")
+    sep3:SetHeight(1)
+    sep3:SetColorTexture(0.3, 0.3, 0.3, 1)
+    sep3:SetPoint("TOPLEFT", 10, -185)
+    sep3:SetPoint("TOPRIGHT", -10, -185)
+    
+    local opacityLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    opacityLabel:SetPoint("TOPLEFT", 15, -195)
+    opacityLabel:SetText("Transparence")
+    self:RegisterText(opacityLabel, "Normal")
+    
+    local opacitySlider = CreateFrame("Slider", "HousingHDVOpacitySlider", popup, "OptionsSliderTemplate")
+    opacitySlider:SetWidth(180)
+    opacitySlider:SetHeight(16)
+    opacitySlider:SetPoint("TOP", 0, -215)
+    opacitySlider:SetMinMaxValues(0.2, 1.0)
+    opacitySlider:SetValueStep(0.1)
+    opacitySlider:SetObeyStepOnDrag(true)
+    opacitySlider:SetValue(HousingCrafterDB.Opacity or 1.0)
+    
+    opacitySlider:SetScript("OnValueChanged", function(self, value)
+        HousingCrafterDB.Opacity = value
+        addonTable.UI:ApplyTheme() -- ApplyTheme utilise HousingCrafterDB.Opacity
+    end)
+
+    -- SECTION 5 : RESET TOTAL
+    local resetBtn = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    resetBtn:SetSize(120, 22)
+    resetBtn:SetPoint("BOTTOM", 0, 35)
+    resetBtn:SetText("Réinitialiser")
+    self:RegisterText(resetBtn, "Small")
+    
+    resetBtn:SetScript("OnClick", function()
+        -- Reset Config
+        HousingCrafterDB.Scale = 1.0
+        HousingCrafterDB.UseLargeText = false
+        HousingCrafterDB.Theme = "Gold"
+        HousingCrafterDB.Opacity = 1.0
+        
+        -- Apply Updates
+        container:SetScale(1.0)
+        UpdateScaleDisplay()
+        
+        typoCheck:SetChecked(false)
+        addonTable.UI:UpdateVisuals()
+        
+        themeVal:SetText(addonTable.UI.Themes["Gold"].name)
+        addonTable.UI:ApplyTheme()
+        
+        opacitySlider:SetValue(1.0)
+    end)
+
+    -- Bouton Fermer (Tout en bas)
+    local closeBtn = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
+    closeBtn:SetSize(80, 20)
+    closeBtn:SetPoint("BOTTOM", 0, 10)
+    closeBtn:SetText("Fermer")
+    self:RegisterText(closeBtn, "Small")
+    closeBtn:SetScript("OnClick", function() popup:Hide() end)
+    
+    self.AccessPopup = popup
 end
 

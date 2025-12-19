@@ -20,6 +20,10 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if loadedAddon == "HousingCrafter" then -- Nom du dossier HousingCrafter
             HousingCrafterDB = HousingCrafterDB or {}
             HousingCrafterDB.CustomLabels = HousingCrafterDB.CustomLabels or {}
+            HousingCrafterDB.Scale = HousingCrafterDB.Scale or 1.0
+            if HousingCrafterDB.UseLargeText == nil then HousingCrafterDB.UseLargeText = false end
+            HousingCrafterDB.Theme = HousingCrafterDB.Theme or "Gold"
+            HousingCrafterDB.Opacity = HousingCrafterDB.Opacity or 1.0
         end
 
         -- Quand l'addon Blizzard_ProfessionsCustomerOrders se charge
